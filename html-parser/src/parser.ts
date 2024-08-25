@@ -20,7 +20,8 @@ export interface TextNode extends Node {
 
 export interface ElementNode extends Node {
   type: NodeTypes.ELEMENT;
-  tag: string; // eg. "div"
+  tag: string; // eg. "<div>"
+  tagName: string; // eg. "div"
   props: Array<AttributeNode>; // eg. { name: "class", value: { content: "container" } }
   children: TemplateChildNode[];
   isSelfClosing: boolean; // eg. <img /> -> true
@@ -29,7 +30,7 @@ export interface ElementNode extends Node {
 export interface AttributeNode extends Node {
   type: NodeTypes.ATTRIBUTE;
   name: string;
-  value: TextNode | undefined;
+  value: string;
 }
 
 type ParseContext = {
@@ -56,7 +57,7 @@ export const parseNode = (ctx: ParseContext): ElementNode | null => {
     return element;
   }
 
-  const parentTag = element.tag;
+  const parentTag = element.tagName;
   const children: TemplateChildNode[] = [];
   const counter = {
     count: 0,
@@ -64,23 +65,13 @@ export const parseNode = (ctx: ParseContext): ElementNode | null => {
   };
   while (true) {
     removeHeadSpaces(ctx);
-    const { text, tag, selftag } = getNextTextAndElement(ctx);
+    const { text, tag } = getNextTextAndElement(ctx);
     // console.log('処理 tag:', tag, 'text:', text);
     if (text) {
       cutHeadStr(ctx, text.length);
       children.push({
         type: NodeTypes.TEXT,
         content: text,
-      });
-    }
-    if (selftag) {
-      cutHeadStr(ctx, selftag.length);
-      children.push({
-        type: NodeTypes.ELEMENT,
-        tag: selftag,
-        props: [],
-        children: [],
-        isSelfClosing: true,
       });
     }
     if (tag) {
@@ -105,23 +96,30 @@ export const parseNode = (ctx: ParseContext): ElementNode | null => {
 
 export const findNextElement = (ctx: ParseContext): ElementNode | null => {
   removeHeadSpaces(ctx);
+  // 開始タグではじまっているかチェック
   const match = /^<([a-z]+)/i.exec(ctx.source)!;
   if (!match) return null;
-  const tagName = match[1];
 
   // とりあえず属性は無視
   // タグ全体をカット
   const match2 = /^(<.+?>)/i.exec(ctx.source)!;
-  const tagStr = match2[1];
-  cutHeadStr(ctx, tagStr.length);
+  const tag = match2[1];
+  cutHeadStr(ctx, tag.length);
   removeHeadSpaces(ctx);
 
-  const isSelfClosing = / \/>$/.test(tagStr);
+  const isSelfClosing = / \/>$/.test(tag);
 
   return {
     type: NodeTypes.ELEMENT,
-    tag: tagName,
-    props: [],
+    tag,
+    tagName: getTagName(tag),
+    props: [
+      // {
+      //   type: NodeTypes.ATTRIBUTE,
+      //   name: 'debug',
+      //   value: 'バル',
+      // },
+    ],
     children: [],
     isSelfClosing,
   };
@@ -177,10 +175,11 @@ export const getNextTextAndElement = (ctx: ParseContext) => {
   let match = null;
   let text = '';
   let tag = '';
+  let tagName = '';
   let selftag = '';
   removeHeadSpaces(ctx);
 
-  // 開始タグを最初に発見
+  // 開始タグまたは自己完結タグを最初に発見
   match = isStartOrSelfFinishTag(ctx.source);
   if (match) {
     text = '';
@@ -189,6 +188,7 @@ export const getNextTextAndElement = (ctx: ParseContext) => {
     return {
       text,
       tag,
+      tagName: getTagName(tag),
       selftag,
     };
   }
@@ -198,6 +198,7 @@ export const getNextTextAndElement = (ctx: ParseContext) => {
     return {
       text,
       tag,
+      tagName,
       selftag,
     };
   }
@@ -209,6 +210,7 @@ export const getNextTextAndElement = (ctx: ParseContext) => {
     return {
       text: text.trim(),
       tag: '',
+      tagName: '',
       selftag,
     };
   }
@@ -219,6 +221,7 @@ export const getNextTextAndElement = (ctx: ParseContext) => {
     return {
       text: text.trim(),
       tag: '',
+      tagName: '',
       selftag,
     };
   }
@@ -231,6 +234,7 @@ export const getNextTextAndElement = (ctx: ParseContext) => {
     return {
       text,
       tag,
+      tagName: getTagName(tag),
       selftag,
     };
   }
@@ -238,6 +242,16 @@ export const getNextTextAndElement = (ctx: ParseContext) => {
   return {
     text,
     tag,
+    tagName: getTagName(tag),
     selftag,
   };
+};
+
+export const getTagName = (tag: string): string => {
+  if (!tag.includes('<')) {
+    return tag;
+  }
+  const match = /<\/*([a-z]+).*>/i.exec(tag)!;
+  if (!match) return '';
+  return match[1];
 };

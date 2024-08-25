@@ -12,6 +12,7 @@ import {
   isTextAndSelfCloseTag,
   isTextAndFinishTag,
   isTextAndStartTag,
+  getTagName,
 } from '../src/parser';
 
 describe('cutHeadStr', () => {
@@ -66,7 +67,8 @@ describe('findNextElement', () => {
     const node = findNextElement(ctx);
     expect(node).toMatchObject({
       type: NodeTypes.ELEMENT,
-      tag: 'div',
+      tag: '<div class="myapp">',
+      tagName: 'div',
       props: [],
       children: [],
       isSelfClosing: false,
@@ -81,7 +83,8 @@ describe('findNextElement', () => {
     const node = findNextElement(ctx);
     expect(node).toMatchObject({
       type: NodeTypes.ELEMENT,
-      tag: 'br',
+      tag: '<br />',
+      tagName: 'br',
       props: [],
       children: [],
       isSelfClosing: true,
@@ -180,17 +183,6 @@ describe('getNextTextAndElement', () => {
   });
 });
 
-// describe('parseChildren', () => {
-//   it('return children', () => {
-//     const ctx = {
-//       source: '  あいうえ       <div class="kakiku">かきくけ</div></section>',
-//     };
-//     const children = parseChildren(ctx, 'section');
-
-//     console.log('children', JSON.stringify(children));
-//   });
-// });
-
 describe('parseNode', () => {
   it('return children 1', () => {
     const ctx = {
@@ -201,18 +193,21 @@ describe('parseNode', () => {
 
     expect(node).toMatchObject({
       type: 'ELEMENT',
-      tag: 'section',
+      tag: '<section class="mysection">',
+      tagName: 'section',
       props: [],
       children: [
         {
           type: 'ELEMENT',
-          tag: 'div',
+          tag: '<div class="kakiku">',
+          tagName: 'div',
           props: [],
           children: [
             { type: 'TEXT', content: 'かき' },
             {
               type: 'ELEMENT',
               tag: '<br />',
+              tagName: 'br',
               props: [],
               children: [],
               isSelfClosing: true,
@@ -243,7 +238,7 @@ describe('parseNode', () => {
     };
     const node = parseNode(ctx);
 
-    console.log('node', JSON.stringify(node));
+    console.log(JSON.stringify(node));
   });
 });
 
@@ -258,6 +253,11 @@ describe('isXXX', () => {
       const match = isStartOrSelfFinishTag('<p>ほんなこつ</p>   <br />');
       expect(match.length).toBe(2);
       expect(match[0]).toBe('<p>');
+    });
+    it('return matched', () => {
+      const match = isStartOrSelfFinishTag('<li>Text1</li>');
+      expect(match.length).toBe(2);
+      expect(match[0]).toBe('<li>');
     });
     it('return null', () => {
       const match = isStartOrSelfFinishTag('</p>   <br />');
@@ -320,5 +320,32 @@ describe('isXXX', () => {
       const match = isTextAndStartTag('<p>ううう</p><p>えええ</p>');
       expect(match).toBe(null);
     });
+  });
+});
+
+describe('getTagName', () => {
+  it('return tagName', () => {
+    const tagName = getTagName('<p>');
+    expect(tagName).toBe('p');
+  });
+  it('return tagName', () => {
+    const tagName = getTagName('<article id="">');
+    expect(tagName).toBe('article');
+  });
+  it('return tagName', () => {
+    const tagName = getTagName(' <li class="VVVVVVVV" />');
+    expect(tagName).toBe('li');
+  });
+  it('return tagName', () => {
+    const tagName = getTagName(' </p>');
+    expect(tagName).toBe('p');
+  });
+  it('return tagName', () => {
+    const tagName = getTagName('');
+    expect(tagName).toBe('');
+  });
+  it('return tagName', () => {
+    const tagName = getTagName('i');
+    expect(tagName).toBe('i');
   });
 });
