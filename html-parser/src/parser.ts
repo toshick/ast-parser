@@ -22,9 +22,9 @@ export interface ElementNode extends Node {
   type: NodeTypes.ELEMENT;
   tag: string; // eg. "<div>"
   tagName: string; // eg. "div"
+  isSelfClosing: boolean; // eg. <img /> -> true
   props: Array<AttributeNode>; // eg. { name: "class", value: { content: "container" } }
   children: TemplateChildNode[];
-  isSelfClosing: boolean; // eg. <img /> -> true
 }
 
 export interface AttributeNode extends Node {
@@ -44,8 +44,7 @@ export const parser = (html: string) => {
 
   return {
     parse: () => {
-      const node = parseNode(ctx);
-      console.log('node', node);
+      return parseNode(ctx);
     },
   };
 };
@@ -66,7 +65,6 @@ export const parseNode = (ctx: ParseContext): ElementNode | null => {
   while (true) {
     removeHeadSpaces(ctx);
     const { text, tag } = getNextTextAndElement(ctx);
-    // console.log('処理 tag:', tag, 'text:', text);
     if (text) {
       cutHeadStr(ctx, text.length);
       children.push({
@@ -97,10 +95,9 @@ export const parseNode = (ctx: ParseContext): ElementNode | null => {
 export const findNextElement = (ctx: ParseContext): ElementNode | null => {
   removeHeadSpaces(ctx);
   // 開始タグではじまっているかチェック
-  const match = /^<([a-z]+)/i.exec(ctx.source)!;
+  const match = /^<([a-z0-9]+)/i.exec(ctx.source)!;
   if (!match) return null;
 
-  // とりあえず属性は無視
   // タグ全体をカット
   const match2 = /^(<.+?>)/i.exec(ctx.source)!;
   const tag = match2[1];
@@ -113,13 +110,7 @@ export const findNextElement = (ctx: ParseContext): ElementNode | null => {
     type: NodeTypes.ELEMENT,
     tag,
     tagName: getTagName(tag),
-    props: [
-      // {
-      //   type: NodeTypes.ATTRIBUTE,
-      //   name: 'debug',
-      //   value: 'バル',
-      // },
-    ],
+    props: getProps(tag),
     children: [],
     isSelfClosing,
   };
@@ -139,7 +130,7 @@ export function cutHeadStr(ctx: ParseContext, length: number): void {
 
 export function isNextCloseTag(ctx: ParseContext, tagName: string): boolean {
   removeHeadSpaces(ctx);
-  const match = /^<\/([a-z][^\t\r\n\f />]*)/i.exec(ctx.source)!;
+  const match = /^<\/([a-z0-9][^\t\r\n\f />]*)/i.exec(ctx.source)!;
   if (!match) return false;
   const findTagName = match[1];
   if (findTagName === tagName) {
@@ -152,23 +143,23 @@ export function isNextCloseTag(ctx: ParseContext, tagName: string): boolean {
 
 // 開始タグを最初に発見;
 export const isStartOrSelfFinishTag = (text: string): RegExpExecArray => {
-  return /^(<[a-z].*?\/*>)/i.exec(text)!;
+  return /^(<[a-z0-9].*?\/*>)/i.exec(text)!;
 };
 // 終了タグを最初に発見;
 export const isFinishTag = (text: string): RegExpExecArray => {
-  return /^(<\/[a-z].*?>)/i.exec(text)!;
+  return /^(<\/[a-z0-9].*?>)/i.exec(text)!;
 };
 // テキストと自己完結タグ;
 export const isTextAndSelfCloseTag = (text: string): RegExpExecArray => {
-  return /^([^<]+?)(<[a-z].*? \/>)/i.exec(text)!;
+  return /^([^<]+?)(<[a-z0-9].*? \/>)/i.exec(text)!;
 };
 // テキストと終了タグ;
 export const isTextAndFinishTag = (text: string): RegExpExecArray => {
-  return /^([^<]+?)(<\/[a-z].*?>)/i.exec(text)!;
+  return /^([^<]+?)(<\/[a-z0-9].*?>)/i.exec(text)!;
 };
 // テキストと開始タグ;
 export const isTextAndStartTag = (text: string): RegExpExecArray => {
-  return /^([^<]+?)(<[a-z].*?>)/i.exec(text)!;
+  return /^([^<]+?)(<[a-z0-9].*?>)/i.exec(text)!;
 };
 
 export const getNextTextAndElement = (ctx: ParseContext) => {
@@ -251,7 +242,21 @@ export const getTagName = (tag: string): string => {
   if (!tag.includes('<')) {
     return tag;
   }
-  const match = /<\/*([a-z]+).*>/i.exec(tag)!;
+  const match = /<\/*([a-z0-9]+).*>/i.exec(tag)!;
   if (!match) return '';
   return match[1];
+};
+
+export const getProps = (tag: string): AttributeNode[] => {
+  const match = tag.match(/[^"' ]+=["][^"]+?["]/gi);
+  if (!match) return [];
+
+  return match.map((attr: string) => {
+    const [key, value] = attr.split('=');
+    return {
+      type: NodeTypes.ATTRIBUTE,
+      name: key,
+      value: value.replace(/["'](.+)["']/g, '$1'),
+    };
+  });
 };

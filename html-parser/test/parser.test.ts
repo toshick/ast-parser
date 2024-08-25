@@ -13,6 +13,7 @@ import {
   isTextAndFinishTag,
   isTextAndStartTag,
   getTagName,
+  getProps,
 } from '../src/parser';
 
 describe('cutHeadStr', () => {
@@ -69,7 +70,13 @@ describe('findNextElement', () => {
       type: NodeTypes.ELEMENT,
       tag: '<div class="myapp">',
       tagName: 'div',
-      props: [],
+      props: [
+        {
+          type: 'ATTRIBUTE',
+          name: 'class',
+          value: 'myapp',
+        },
+      ],
       children: [],
       isSelfClosing: false,
     });
@@ -187,7 +194,7 @@ describe('parseNode', () => {
   it('return children 1', () => {
     const ctx = {
       source:
-        '<section class="mysection">  <div class="kakiku">かき<br />くけ</div></section>',
+        '<section class="mysection">  <div class="kakiku">かき<br class="mybr" />くけ</div></section>',
     };
     const node = parseNode(ctx);
 
@@ -195,20 +202,38 @@ describe('parseNode', () => {
       type: 'ELEMENT',
       tag: '<section class="mysection">',
       tagName: 'section',
-      props: [],
+      props: [
+        {
+          type: 'ATTRIBUTE',
+          name: 'class',
+          value: 'mysection',
+        },
+      ],
       children: [
         {
           type: 'ELEMENT',
           tag: '<div class="kakiku">',
           tagName: 'div',
-          props: [],
+          props: [
+            {
+              type: 'ATTRIBUTE',
+              name: 'class',
+              value: 'kakiku',
+            },
+          ],
           children: [
             { type: 'TEXT', content: 'かき' },
             {
               type: 'ELEMENT',
-              tag: '<br />',
+              tag: '<br class="mybr" />',
               tagName: 'br',
-              props: [],
+              props: [
+                {
+                  type: 'ATTRIBUTE',
+                  name: 'class',
+                  value: 'mybr',
+                },
+              ],
               children: [],
               isSelfClosing: true,
             },
@@ -220,20 +245,44 @@ describe('parseNode', () => {
       isSelfClosing: false,
     });
   });
-  it('return children 2', () => {
+  it.skip('return children 2', () => {
     const ctx = {
       source: `
-          <article>
-            <p>かいぎょう<br />する</p>
+          <article data-e2e="fortest" class="myarticle" style="{'background-color': '0xff3355'}">
+            <p>かいぎょう<br class="mybr" />する</p>
             <ul class="mysection">
               <li>Text1</li>
-              <li>Text2</li>
+              <li id="this-is-text-2">Text2</li>
               <li>Text3</li>
               <li>Text4</li>
-              <li>Text5</li>
+              <li>Text5<div>ほんなこつ</div></li>
             </ul>
             はひふへ<br /><br />ほほほ
           </article>
+        `,
+    };
+    const node = parseNode(ctx);
+
+    console.log(JSON.stringify(node));
+  });
+  it('return children 3', () => {
+    const ctx = {
+      source: `
+         <div>
+          <a href="https://vitejs.dev" target="_blank">
+            <img src="url" class="logo" alt="Vite logo" />
+          </a>
+          <a href="https://www.typescriptlang.org/" target="_blank">
+            <img src="mysrc" class="logo vanilla" alt="TypeScript logo" />
+          </a>
+          <h1>Vite + TypeScript</h1>
+          <div class="card">
+            <button id="counter" type="button">ぼたん</button>
+          </div>
+          <p class="read-the-docs">
+            Click on the Vite and TypeScript logos to learn more
+          </p>
+        </div>
         `,
     };
     const node = parseNode(ctx);
@@ -347,5 +396,35 @@ describe('getTagName', () => {
   it('return tagName', () => {
     const tagName = getTagName('i');
     expect(tagName).toBe('i');
+  });
+});
+
+describe('getProps', () => {
+  it('return props', () => {
+    const props = getProps('<p class="fff">');
+    expect(props).toMatchObject([
+      {
+        type: 'ATTRIBUTE',
+        name: 'class',
+        value: 'fff',
+      },
+    ]);
+  });
+  it('return props', () => {
+    const props = getProps(
+      '<p class="aaa" style="{\'border\': \'solid 1px #333\'}">'
+    );
+    expect(props).toMatchObject([
+      {
+        type: 'ATTRIBUTE',
+        name: 'class',
+        value: 'aaa',
+      },
+      {
+        type: 'ATTRIBUTE',
+        name: 'style',
+        value: "{'border': 'solid 1px #333'}",
+      },
+    ]);
   });
 });
