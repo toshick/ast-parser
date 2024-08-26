@@ -14,7 +14,7 @@ import {
   isTextAndStartTag,
   getTagName,
   getProps,
-} from '../src/parser';
+} from '../src/lib/parser';
 
 describe('cutHeadStr', () => {
   it('cut head strings', () => {

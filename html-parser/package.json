@@ -3,6 +3,13 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "module": "./dist/html-parser.js",
+  "exports": {
+    ".": {
+      "import": "./dist/html-parser.js",
+      "require": "./dist/html-parser.umd.cjs"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

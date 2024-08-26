@@ -1,0 +1,10 @@
+{
+  "name": "playground",
+  "type": "module",
+  "scripts": {
+    "play": "node play.js"
+  },
+  "dependencies": {
+    "html-parser": "file:../html-parser"
+  }
+}

@@ -1,5 +1,4 @@
-import './style.css';
-import { parser } from './lib/parser.ts';
+import { parser } from 'html-parser';
 
 const html = `
   <div>
@@ -15,34 +14,8 @@ const html = `
     <pre id="tokens"></pre>
   </div>
 `;
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = html;
 
-/**
- * パース
- */
 const p = parser(html);
 const tokens = p.parse();
 
-const $tokens = document.getElementById('tokens');
-const tokensStr = JSON.stringify(tokens);
-
-if ($tokens) $tokens.innerHTML = escape(JSON.stringify(tokensStr));
-
-function escape(html: string) {
-  return html.replace(/[<>&'"]/g, (c) => {
-    switch (c) {
-      case '<':
-        return '&lt;';
-      case '>':
-        return '&gt;';
-      case '&':
-        return '&amp;';
-      case "'":
-        return '&apos;';
-      case '"':
-        return '&quot;';
-      default:
-        return c;
-    }
-  });
-}
+console.log('tokens', tokens);
