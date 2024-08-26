@@ -1,24 +1,29 @@
 {
-  "name": "html-parser",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "module": "./dist/html-parser.js",
+  "name": "@toshick/html-parser",
+  "description": "read html and create tokens",
+  "version": "1.0.0",
+  "author": "toshick",
+  "devDependencies": {
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1",
+    "vitest": "^2.0.5"
+  },
   "exports": {
     ".": {
       "import": "./dist/html-parser.js",
       "require": "./dist/html-parser.umd.cjs"
     }
   },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/html-parser.js",
+  "module": "./dist/html-parser.js",
   "scripts": {
-    "dev": "vite",
     "build": "tsc && vite build",
+    "dev": "vite",
     "preview": "vite preview",
     "test": "vitest watch"
   },
-  "devDependencies": {
-    "typescript": "^5.5.3",
-    "vite": "^5.4.1",
-    "vitest": "^2.0.5"
-  }
+  "type": "module"
 }

@@ -5,6 +5,6 @@
     "play": "node play.js"
   },
   "dependencies": {
-    "html-parser": "file:../html-parser"
+    "@toshick/html-parser": "link:../html-parser"
   }
 }

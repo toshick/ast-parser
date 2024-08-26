@@ -1,4 +1,4 @@
-import { parser } from 'html-parser';
+import { parser } from '@toshick/html-parser';
 
 const html = `
   <div>
