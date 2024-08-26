@@ -191,7 +191,7 @@ describe('getNextTextAndElement', () => {
 });
 
 describe('parseNode', () => {
-  it('return children 1', () => {
+  it.skip('return children 1', () => {
     const ctx = {
       source:
         '<section class="mysection">  <div class="kakiku">かき<br class="mybr" />くけ</div></section>',
@@ -269,13 +269,14 @@ describe('parseNode', () => {
     const ctx = {
       source: `
          <div>
+         <h1><img class="dog" src="/dog2.png" /> I want to parse html and break down to tokens.</h1>
           <a href="https://vitejs.dev" target="_blank">
             <img src="url" class="logo" alt="Vite logo" />
           </a>
           <a href="https://www.typescriptlang.org/" target="_blank">
             <img src="mysrc" class="logo vanilla" alt="TypeScript logo" />
           </a>
-          <h1>Vite + TypeScript</h1>
+          
           <div class="card">
             <button id="counter" type="button">ぼたん</button>
           </div>

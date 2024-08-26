@@ -2,7 +2,7 @@ import { parser } from 'html-parser';
 
 const html = `
   <div>
-    <h1><img class="dog" src="/dog2.png" /> I want to parse html and break down to tokens.</h1>
+    <h1 class="title"><img class="dog" src="/dog2.png" /> I want to parse html and break down to tokens.</h1>
     <ul class="hotwo">
       <li>文字列からタグを検索していく</li>
       <li>開始タグをみつけたら、そのタグの子要素を children に格納する</li>
@@ -18,4 +18,4 @@ const html = `
 const p = parser(html);
 const tokens = p.parse();
 
-console.log('tokens', tokens);
+console.log('tokens', JSON.stringify(tokens));
